@@ -54,14 +54,14 @@ class MainActivity : AppCompatActivity() {
 
             val service = AutoAgentService.instance
             if (service == null) {
-                logOutput.append("\n[!] Service not running. Enable it first.")
+                logOutput.appendLine("[!] Service not running. Enable it first.")
                 return@setOnClickListener
             }
 
-            logOutput.append("\n[>] Executing: $command")
+            logOutput.appendLine("[>] Executing: " + command)
             service.executeCommand(command, apiKey, model) { result ->
                 runOnUiThread {
-                    logOutput.append("\n[<] $result")
+                    logOutput.appendLine("[<] " + result)
                 }
             }
         }
@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkAccessibilityStatus() {
         val am = getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val services = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL)
+        val services = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
         var isOn = false
         for (s in services) {
             val info = s.resolveInfo.serviceInfo
@@ -88,9 +88,9 @@ class MainActivity : AppCompatActivity() {
         
         btnExecute.isEnabled = isOn
         if (isOn) {
-            logOutput.append("\n[OK] Service is ON")
+            logOutput.appendLine("[OK] Service is ON")
         } else {
-            logOutput.append("\n[!] Service is OFF")
+            logOutput.appendLine("[!] Service is OFF")
         }
     }
 }
