@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Phone AI Agent</string>
+    <string name="accessibility_service_description">Phone AI Agent uses Accessibility Service to read screen content and perform automated actions based on AI commands.</string>
+</resources>
