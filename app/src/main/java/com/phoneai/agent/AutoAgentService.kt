@@ -55,7 +55,7 @@ class AutoAgentService : AccessibilityService() {
         val screenContext = buildScreenContext(rootNode)
         rootNode.recycle()
 
-        callback("[...] Sending to OpenRouter ($model)...")
+        callback("[...] Sending to OpenRouter (" + model + ")...")
 
         openRouter.sendCommand(command, screenContext, apiKey, model) { response ->
             handler.post {
@@ -63,7 +63,7 @@ class AutoAgentService : AccessibilityService() {
                     callback("[!] API Error. Check key and network.")
                     return@post
                 }
-                callback("[✓] AI Response received")
+                callback("[OK] AI Response received")
                 executeActions(response, callback)
             }
         }
@@ -71,8 +71,7 @@ class AutoAgentService : AccessibilityService() {
 
     private fun buildScreenContext(root: AccessibilityNodeInfo): String {
         val sb = StringBuilder()
-        sb.append("Current screen elements:
-")
+        sb.appendLine("Current screen elements:")
         traverseNode(root, sb, 0)
         return sb.toString()
     }
@@ -88,8 +87,7 @@ class AutoAgentService : AccessibilityService() {
 
         if (text.isNotEmpty() || contentDesc.isNotEmpty()) {
             val displayText = if (text.isNotEmpty()) text else contentDesc
-            sb.append("$indent- $className: "$displayText" $clickable $editable $scrollable
-")
+            sb.appendLine(indent + "- " + className + ": \"" + displayText + "\" " + clickable + " " + editable + " " + scrollable)
         }
 
         for (i in 0 until node.childCount) {
@@ -107,26 +105,26 @@ class AutoAgentService : AccessibilityService() {
                 callback("[!] Empty response from AI")
                 return
             }
-
+            
             val content = choices.getJSONObject(0)
                 .getJSONObject("message")
                 .getString("content")
 
-            callback("[AI] $content")
+            callback("[AI] " + content)
             parseAndExecuteActions(content, callback)
 
         } catch (e: Exception) {
-            callback("[!] Parse error: ${e.message}")
+            callback("[!] Parse error: " + e.message)
             Log.e(TAG, "Parse error", e)
         }
     }
 
     private fun parseAndExecuteActions(content: String, callback: (String) -> Unit) {
-        val tapRegex = "\[TAP:([^\]]+)\]".toRegex()
-        val typeRegex = "\[TYPE:([^\]]+):([^\]]+)\]".toRegex()
-        val swipeRegex = "\[SWIPE:([^\]]+)\]".toRegex()
-        val backRegex = "\[BACK\]".toRegex()
-        val homeRegex = "\[HOME\]".toRegex()
+        val tapRegex = """\[TAP:([^\]]+)\]""".toRegex()
+        val typeRegex = """\[TYPE:([^\]]+):([^\]]+)\]""".toRegex()
+        val swipeRegex = """\[SWIPE:([^\]]+)\]""".toRegex()
+        val backRegex = """\[BACK\]""".toRegex()
+        val homeRegex = """\[HOME\]""".toRegex()
 
         var actionTaken = false
 
@@ -145,10 +143,10 @@ class AutoAgentService : AccessibilityService() {
         tapRegex.findAll(content).forEach { match ->
             val targetText = match.groupValues[1]
             if (tapByText(targetText)) {
-                callback("[Action] Tapped: $targetText")
+                callback("[Action] Tapped: " + targetText)
                 actionTaken = true
             } else {
-                callback("[!] Could not find: $targetText")
+                callback("[!] Could not find: " + targetText)
             }
         }
 
@@ -156,10 +154,10 @@ class AutoAgentService : AccessibilityService() {
             val targetText = match.groupValues[1]
             val inputText = match.groupValues[2]
             if (typeIntoField(targetText, inputText)) {
-                callback("[Action] Typed '$inputText' into: $targetText")
+                callback("[Action] Typed '" + inputText + "' into: " + targetText)
                 actionTaken = true
             } else {
-                callback("[!] Could not find field: $targetText")
+                callback("[!] Could not find field: " + targetText)
             }
         }
 
@@ -171,7 +169,7 @@ class AutoAgentService : AccessibilityService() {
                 "left" -> performSwipe(800f, 900f, 200f, 900f)
                 "right" -> performSwipe(200f, 900f, 800f, 900f)
             }
-            callback("[Action] Swiped $direction")
+            callback("[Action] Swiped " + direction)
             actionTaken = true
         }
 
@@ -184,7 +182,7 @@ class AutoAgentService : AccessibilityService() {
         val root = rootInActiveWindow ?: return false
         val node = findNodeByText(root, text)
         root.recycle()
-
+        
         if (node != null) {
             val rect = Rect()
             node.getBoundsInScreen(rect)
@@ -198,7 +196,7 @@ class AutoAgentService : AccessibilityService() {
         val root = rootInActiveWindow ?: return false
         val node = findNodeByText(root, hintText)
         root.recycle()
-
+        
         if (node != null) {
             val args = android.os.Bundle()
             args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, input)
@@ -212,17 +210,17 @@ class AutoAgentService : AccessibilityService() {
     private fun findNodeByText(root: AccessibilityNodeInfo, text: String): AccessibilityNodeInfo? {
         val queue = java.util.ArrayDeque<AccessibilityNodeInfo>()
         queue.add(root)
-
+        
         while (queue.isNotEmpty()) {
             val node = queue.poll()
             val nodeText = node.text?.toString() ?: ""
             val contentDesc = node.contentDescription?.toString() ?: ""
-
+            
             if (nodeText.contains(text, ignoreCase = true) || 
                 contentDesc.contains(text, ignoreCase = true)) {
                 return node
             }
-
+            
             for (i in 0 until node.childCount) {
                 node.getChild(i)?.let { queue.add(it) }
             }
